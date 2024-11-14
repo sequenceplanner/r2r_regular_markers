@@ -123,11 +123,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     r2r::log_info!(NODE_ID, "Node started.");
 
-    tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
 
     server.delete("my_marker");
-
-    // Apply changes to publish updates
     server.apply_changes();
 
     handle.join().unwrap();

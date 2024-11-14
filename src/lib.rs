@@ -3,6 +3,7 @@ use r2r::{Publisher, QosProfile, Timer};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+/// Represents the type of update to perform on a marker.
 #[derive(Clone, Debug)]
 pub enum UpdateType {
     Add,
@@ -11,34 +12,43 @@ pub enum UpdateType {
     DeleteAll,
 }
 
-// Struct to hold the information about an update
+/// Holds information about a marker update.
 #[derive(Clone, Debug)]
 struct UpdateContext {
     pub update_type: UpdateType,
     pub marker: Marker,
 }
 
+/// A server that manages and publishes markers regularly.
 #[derive(Clone)]
 pub struct RegularMarkerServer {
     pub topic_namespace: String,
     pub topic_name: String,
     marker_contexts: Arc<Mutex<HashMap<String, Marker>>>,
     pending_updates: Arc<Mutex<HashMap<String, UpdateContext>>>,
-    // update_publisher: Publisher<MarkerArray>
 }
 
 impl RegularMarkerServer {
+    /// Creates a new `RegularMarkerServer`.
+    ///
+    /// # Arguments
+    ///
+    /// * `topic_namespace` - The namespace for the ROS topic.
+    /// * `topic_name` - The name of the ROS topic.
+    /// * `node` - A reference to the ROS node.
     pub fn new(topic_namespace: &str, topic_name: &str, node: Arc<Mutex<r2r::Node>>) -> Self {
         let publisher_topic = format!("{}/{}", topic_namespace, topic_name);
         let mut publisher_qos = QosProfile::default();
         publisher_qos.depth = 100;
 
+        // Create a publisher for MarkerArray messages.
         let publisher = node
             .lock()
             .unwrap()
             .create_publisher::<MarkerArray>(&publisher_topic, publisher_qos)
             .expect("Failed to create publisher");
 
+        // Create a timer for periodic publishing.
         let timer = node
             .lock()
             .unwrap()
@@ -49,6 +59,8 @@ impl RegularMarkerServer {
         let pending_updates = Arc::new(Mutex::new(HashMap::new()));
 
         let marker_contexts_clone = marker_contexts.clone();
+        
+        // Spawn a task to publish markers periodically.
         tokio::task::spawn(async move {
             match Self::marker_array_publisher(marker_contexts_clone, publisher, timer).await {
                 Ok(()) => (),
@@ -67,9 +79,16 @@ impl RegularMarkerServer {
         }
     }
 
+    /// Inserts a new marker.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The unique name of the marker.
+    /// * `marker` - The marker data to insert.
     pub fn insert(&self, name: &str, marker: Marker) {
         let mut pending_updates = self.pending_updates.lock().unwrap();
 
+        // Add or update the pending update for the marker.
         let update_context =
             pending_updates
                 .entry(name.to_string())
@@ -84,7 +103,12 @@ impl RegularMarkerServer {
         println!("Marker added with name '{}'", name);
     }
 
-    pub fn delete(&self, name: &str) {//-> bool {
+    /// Deletes a marker by its name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The unique name of the marker to delete.
+    pub fn delete(&self, name: &str) {
         let marker_contexts = self.marker_contexts.lock().unwrap();
         let mut pending_updates = self.pending_updates.lock().unwrap();
 
@@ -96,12 +120,10 @@ impl RegularMarkerServer {
                     marker: marker_context.clone(),
                 },
             );
-        //     true
-        // } else {
-        //     false
         }
     }
 
+    /// Applies pending updates to markers.
     pub fn apply_changes(&self) {
         let mut marker_contexts = self.marker_contexts.lock().unwrap();
         let mut pending_updates = self.pending_updates.lock().unwrap();
@@ -147,6 +169,13 @@ impl RegularMarkerServer {
         pending_updates.clear();
     }
 
+    /// Publishes marker arrays periodically.
+    ///
+    /// # Arguments
+    ///
+    /// * `marker_contexts` - Shared marker contexts.
+    /// * `publisher` - The publisher to publish marker arrays.
+    /// * `timer` - Timer for periodic publishing.
     async fn marker_array_publisher(
         marker_contexts: Arc<Mutex<HashMap<String, Marker>>>,
         publisher: Publisher<MarkerArray>,
@@ -156,21 +185,27 @@ impl RegularMarkerServer {
             let mut marker_contexts = marker_contexts.lock().unwrap().clone();
             let mut update_msg = MarkerArray::default();
 
+            // Collect markers to publish.
             for (_, marker) in &marker_contexts {
                 update_msg.markers.push(marker.clone());
             }
 
+            // Publish the marker array.
             publisher
                 .publish(&update_msg)
                 .expect("Failed to publish update");
 
-            // maintain context
+            // Update marker contexts based on actions.
             for (name, marker) in marker_contexts.clone().iter() {
                 match marker.action {
                     2 => {
+                        // Remove markers marked for deletion.
                         let _ = marker_contexts.remove(name);
                     }
-                    3 => marker_contexts.clear(),
+                    3 => {
+                        // Clear all markers if delete all action is set.
+                        marker_contexts.clear();
+                    },
                     _ => (),
                 }
             }
