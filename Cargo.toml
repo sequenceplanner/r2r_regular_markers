@@ -5,7 +5,6 @@ authors = ["Endre Erős <endre.eros@chalmersindustriteknik.se>"]
 edition = "2021"
 autotests = true
 
-
 [profile.colcon]
 inherits = "release"
 

@@ -182,11 +182,11 @@ impl RegularMarkerServer {
         mut timer: Timer,
     ) -> Result<(), Box<dyn std::error::Error>> {
         loop {
-            let mut marker_contexts = marker_contexts.lock().unwrap().clone();
+            let mut markers = marker_contexts.lock().unwrap().clone();
             let mut update_msg = MarkerArray::default();
 
             // Collect markers to publish.
-            for (_, marker) in &marker_contexts {
+            for (_, marker) in &markers {
                 update_msg.markers.push(marker.clone());
             }
 
@@ -196,19 +196,21 @@ impl RegularMarkerServer {
                 .expect("Failed to publish update");
 
             // Update marker contexts based on actions.
-            for (name, marker) in marker_contexts.clone().iter() {
+            for (name, marker) in markers.clone().iter() {
                 match marker.action {
                     2 => {
                         // Remove markers marked for deletion.
-                        let _ = marker_contexts.remove(name);
+                        let _ = markers.remove(name);
                     }
                     3 => {
                         // Clear all markers if delete all action is set.
-                        marker_contexts.clear();
+                        markers.clear();
                     },
                     _ => (),
                 }
             }
+
+            *marker_contexts.lock().unwrap() = markers;
 
             timer.tick().await?;
         }
