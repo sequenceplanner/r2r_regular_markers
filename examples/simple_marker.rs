@@ -123,6 +123,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     r2r::log_info!(NODE_ID, "Node started.");
 
+    tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+
+    server.delete("my_marker");
+
+    // Apply changes to publish updates
+    server.apply_changes();
+
     handle.join().unwrap();
 
     Ok(())
@@ -153,12 +160,14 @@ async fn static_frame_broadcaster_callback(
                         frame_id: v.parent_frame_id.clone(),
                     },
                     child_frame_id: v.child_frame_id.clone(),
-                    transform: Transform { translation: Vector3 {
-                        x,
-                        y: v.transform.translation.y.clone(),
-                        z: v.transform.translation.z.clone(),
-                    }, rotation: v.transform.rotation.clone(), }
-                    
+                    transform: Transform {
+                        translation: Vector3 {
+                            x,
+                            y: v.transform.translation.y.clone(),
+                            z: v.transform.translation.z.clone(),
+                        },
+                        rotation: v.transform.rotation.clone(),
+                    },
                 });
             }
             Some(true) | None => (),

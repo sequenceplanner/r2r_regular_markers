@@ -84,6 +84,24 @@ impl RegularMarkerServer {
         println!("Marker added with name '{}'", name);
     }
 
+    pub fn delete(&self, name: &str) {//-> bool {
+        let marker_contexts = self.marker_contexts.lock().unwrap();
+        let mut pending_updates = self.pending_updates.lock().unwrap();
+
+        if let Some(marker_context) = marker_contexts.get(name) {
+            pending_updates.insert(
+                name.to_string(),
+                UpdateContext {
+                    update_type: UpdateType::Delete,
+                    marker: marker_context.clone(),
+                },
+            );
+        //     true
+        // } else {
+        //     false
+        }
+    }
+
     pub fn apply_changes(&self) {
         let mut marker_contexts = self.marker_contexts.lock().unwrap();
         let mut pending_updates = self.pending_updates.lock().unwrap();
