@@ -48,7 +48,7 @@ fn make_initial_tf() -> HashMap<String, FrameData> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let context = Context::create()?;
-    let node = r2r::Node::create(context, "simple_marker", "")?;
+    let node = r2r::Node::create(context, "asdf", "")?;
     let arc_node = Arc::new(Mutex::new(node));
 
     // We need to publish a frame where the marker can be placed
@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .lock()
         .unwrap()
         .create_publisher::<TFMessage>(
-            "tf_static",
+            "tf",
             QosProfile::transient_local(QosProfile::default()),
         )?;
     let broadcasted_frames_clone = broadcasted_frames.clone();
@@ -75,7 +75,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         {
             Ok(()) => (),
-            Err(e) => r2r::log_error!(NODE_ID, "Static frame broadcaster failed with: '{}'.", e),
+            Err(e) => r2r::log_error!(NODE_ID, "Active frame broadcaster failed with: '{}'.", e),
         };
     });
 
@@ -123,10 +123,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     r2r::log_info!(NODE_ID, "Node started.");
 
-    tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
+    // tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
 
-    server.delete("my_marker");
-    server.apply_changes();
+    // server.delete("my_marker");
+    // server.apply_changes();
 
     handle.join().unwrap();
 

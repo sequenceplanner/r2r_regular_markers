@@ -33,7 +33,7 @@ Add the following to your `Cargo.toml`:
 ```toml
 [dependencies]
 r2r = "0.9.0"
-r2r_regular_markers = { git = "https://github.com/sequenceplanner/r2r_regular_markers", tag = "v0.0.1" }
+r2r_regular_markers = { git = "https://github.com/sequenceplanner/r2r_regular_markers", tag = "v0.0.2" }
 tokio = { version = "1.36.0", features = ["full"] }
 
 ```
