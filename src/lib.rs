@@ -22,8 +22,8 @@ struct UpdateContext {
 /// A server that manages and publishes markers regularly.
 #[derive(Clone)]
 pub struct RegularMarkerServer {
-    pub topic_namespace: String,
-    pub topic_name: String,
+    // pub topic_namespace: String,
+    pub topic: String,
     marker_contexts: Arc<Mutex<HashMap<String, Marker>>>,
     pending_updates: Arc<Mutex<HashMap<String, UpdateContext>>>,
 }
@@ -36,8 +36,8 @@ impl RegularMarkerServer {
     /// * `topic_namespace` - The namespace for the ROS topic.
     /// * `topic_name` - The name of the ROS topic.
     /// * `node` - A reference to the ROS node.
-    pub fn new(topic_namespace: &str, topic_name: &str, node: Arc<Mutex<r2r::Node>>) -> Self {
-        let publisher_topic = format!("{}/{}", topic_namespace, topic_name);
+    pub fn new(topic: &str, node: Arc<Mutex<r2r::Node>>) -> Self {
+        let publisher_topic = format!("{}", topic);
         let mut publisher_qos = QosProfile::default();
         publisher_qos.depth = 100;
 
@@ -72,8 +72,8 @@ impl RegularMarkerServer {
         let pending_updates_clone = pending_updates.clone();
 
         Self {
-            topic_namespace: topic_namespace.to_string(),
-            topic_name: topic_name.to_string(),
+            // topic_namespace: topic_namespace.to_string(),
+            topic: topic.to_string(),
             marker_contexts: marker_contexts_clone,
             pending_updates: pending_updates_clone,
         }
