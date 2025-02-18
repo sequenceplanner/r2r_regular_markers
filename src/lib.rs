@@ -36,7 +36,7 @@ impl RegularMarkerServer {
     /// * `topic_namespace` - The namespace for the ROS topic.
     /// * `topic_name` - The name of the ROS topic.
     /// * `node` - A reference to the ROS node.
-    pub fn new(topic: &str, node: Arc<Mutex<r2r::Node>>) -> Self {
+    pub fn new(topic: &str, node: &Arc<Mutex<r2r::Node>>) -> Self {
         let publisher_topic = format!("{}", topic);
         let mut publisher_qos = QosProfile::default();
         publisher_qos.depth = 100;
@@ -59,7 +59,7 @@ impl RegularMarkerServer {
         let pending_updates = Arc::new(Mutex::new(HashMap::new()));
 
         let marker_contexts_clone = marker_contexts.clone();
-        
+
         // Spawn a task to publish markers periodically.
         tokio::task::spawn(async move {
             match Self::marker_array_publisher(marker_contexts_clone, publisher, timer).await {
@@ -205,7 +205,7 @@ impl RegularMarkerServer {
                     3 => {
                         // Clear all markers if delete all action is set.
                         markers.clear();
-                    },
+                    }
                     _ => (),
                 }
             }

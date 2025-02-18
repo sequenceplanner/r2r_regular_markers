@@ -80,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let arc_node_clone = arc_node.clone();
-    let server = RegularMarkerServer::new("simple_marker", arc_node_clone);
+    let server = RegularMarkerServer::new("simple_marker", &arc_node_clone);
 
     let mut marker = Marker::default();
     marker.header.frame_id = "base_link".to_string();
